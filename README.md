@@ -6,7 +6,6 @@ The Galaxy A20's bootloader has a bug where it refuses to load boot/recovery ima
 </p>
 
 ## How to fix
-1. Download the Python script of this repository.
-2. Run `python fix_bootable_image.py boot.img fixed.img` (replace boot.img with the boot or recovery image you want to fix)
-3. Flash the `fixed.img` image through Heimdall
-4. Done!
+You have two options:
+* Flash the [FixBootImage zip](https://github.com/GalaxyA20s/A20s-Fix-Bootable-Image/releases/latest/download/FixBootImage.zip) in TWRP. This will fix the boot image you have installed on your device.
+* Use the [Python script](./fix_bootable_image.py) to fix the image & then flash it. Example: `python fix_bootable_image.py boot.img fixed.img`

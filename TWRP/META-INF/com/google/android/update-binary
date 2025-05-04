@@ -1,0 +1,39 @@
+#!/sbin/sh
+
+OUTFD=$2
+BOOTIMAGE=/dev/block/by-name/boot
+
+ui_print() {
+  echo -e "ui_print $1\nui_print" >> /proc/self/fd/$OUTFD
+}
+
+abort() {
+  ui_print "Abort: $1"
+  exit 1
+}
+
+ui_print "########### Secure Check Fail Fixer ###########"
+ui_print "- Fixes the installed Boot Image to avoid the Secure Check Fail error"
+ui_print "- Get help on t.me/SamsungGalaxyA20s"
+
+[ -e "$BOOTIMAGE" ] || abort "$BOOTIMAGE does not exist!"
+dd if="$BOOTIMAGE" of=/tmp/boot.img bs=512K
+[ $? -eq 0 ] || abort "dd failed with code $?"
+BOOTNAND="$BOOTIMAGE"
+BOOTIMAGE=/tmp/boot.img
+[ -e "$BOOTIMAGE" ] || abort "Failed to dump $BOOTNAND"
+
+unzip -o "$3" fixbootableimage -d /tmp/
+[ -e "/tmp/fixbootableimage" ] || abort "Failed to extract binary"
+chmod +x /tmp/fixbootableimage
+/tmp/fixbootableimage "$BOOTIMAGE" | while read line; do
+    ui_print "$line"
+done
+[ $? -eq 0 ] || abort "fixbootableimage failed with code $?"
+
+ui_print "Flashing new image..."
+dd if="$BOOTIMAGE" of="$BOOTNAND" bs=512K
+[ $? -eq 0 ] || abort "dd failed with code $?"
+
+ui_print "#################### Done! ####################"
+exit 0
