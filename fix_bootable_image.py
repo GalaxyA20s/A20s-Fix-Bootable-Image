@@ -71,6 +71,13 @@ if data[-AVB_FOOTER_SIZE:].startswith(AVB_FOOTER_MAGIC):
 else:   # AVB footer not present
     print('Adding magic & AVB footer...')
 
+    new_img_size = len(data) + SIGNERVER2_SIZE + AVB_FOOTER_SIZE
+    if new_img_size >= PARTITION_SIZE:
+        # Lets check if the image ends with empty bytes so we can remove them
+        to_be_removed = new_img_size - PARTITION_SIZE
+        assert data[-to_be_removed:] == b'\x00' * to_be_removed
+        data = data[:-to_be_removed]
+
     # Add SignerVer02 magic
     data += SIGNERVER2_MAGIC
     data += b'\x00' * (SIGNERVER2_SIZE - len(SIGNERVER2_MAGIC))
