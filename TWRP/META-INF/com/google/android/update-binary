@@ -8,7 +8,7 @@ ui_print() {
 }
 
 abort() {
-  ui_print "Abort: $1"
+  ui_print "[!] Abort: $1"
   exit 1
 }
 
@@ -26,10 +26,14 @@ BOOTIMAGE=/tmp/boot.img
 unzip -o "$3" fixbootableimage -d /tmp/
 [ -e "/tmp/fixbootableimage" ] || abort "Failed to extract binary"
 chmod +x /tmp/fixbootableimage
-/tmp/fixbootableimage "$BOOTIMAGE" | while read line; do
-    ui_print "$line"
-done
-[ $? -eq 0 ] || abort "fixbootableimage failed with code $?"
+
+/tmp/fixbootableimage "$BOOTIMAGE" > /tmp/log.txt
+code=$?
+while read -r line; do
+  ui_print "[*] $line"
+done < /tmp/log.txt
+
+[ $code -eq 0 ] || abort "fixbootableimage failed (code $code)"
 
 ui_print "Flashing new image..."
 dd if="$BOOTIMAGE" of="$BOOTNAND" bs=512K

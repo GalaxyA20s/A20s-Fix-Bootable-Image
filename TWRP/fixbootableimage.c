@@ -75,7 +75,7 @@ int main(int argc, char ** argv) {
     FILE *f = fopen(argv[1], "rb+");
     if (!f) {
         perror("fopen failed");
-        return 1;
+        return 2;
     }
 
     fseek(f, 0, SEEK_END);
@@ -84,7 +84,7 @@ int main(int argc, char ** argv) {
     if (file_size < 0 || file_size > PARTITION_SIZE) {
         printf("Invalid image size: %ld\n", file_size);
         fclose(f);
-        return 1;
+        return 3;
     }
 
     // Check if this is a valid boot image
@@ -93,17 +93,17 @@ int main(int argc, char ** argv) {
     if (read_size != 1) {
         perror("fread failed for header");
         fclose(f);
-        return 1;
+        return 4;
     }
     if (memcmp(header.magic, BOOT_MAGIC, BOOT_MAGIC_SIZE) != 0) {
         printf("Not a valid boot image\n");
         fclose(f);
-        return 1;
+        return 5;
     }
     if (header.header_version != 1) {
         printf("Unexpected boot image version: %u\n", header.header_version);
         fclose(f);
-        return 1;
+        return 6;
     }
 
     // Add the AVB Footer if not present and ensure it points to the SignerVer02 Magic
@@ -113,7 +113,7 @@ int main(int argc, char ** argv) {
     if (footer_read_size != 1) {
         perror("fread failed for AVB footer");
         fclose(f);
-        return 1;
+        return 7;
     }
 
     if (memcmp(footer.magic, AVB_FOOTER_MAGIC, AVB_FOOTER_MAGIC_LEN) != 0) {
@@ -122,7 +122,7 @@ int main(int argc, char ** argv) {
         if (file_size > PARTITION_SIZE - AVB_FOOTER_SIZE - SIGNERVER2_SIZE) {
             printf("Not enough space in image\n");
             fclose(f);
-            return 1;
+            return 8;
         }
 
         // Add SignerVer02 magic at the end
@@ -132,7 +132,7 @@ int main(int argc, char ** argv) {
         if (written_size != 1) {
             perror("fwrite failed for SignerVer02 magic");
             fclose(f);
-            return 1;
+            return 9;
         }
 
         file_size += SIGNERVER2_SIZE;
@@ -153,7 +153,7 @@ int main(int argc, char ** argv) {
         if (written_size != 1) {
             perror("fwrite failed for AVB footer");
             fclose(f);
-            return 1;
+            return 10;
         }
 
         fclose(f);
@@ -163,7 +163,7 @@ int main(int argc, char ** argv) {
     if (file_size != PARTITION_SIZE) {
         printf("Found AVB footer but the image doesn't match the size of the partition\n");
         fclose(f);
-        return 1;
+        return 11;
     }
 
     printf("Found AVB footer\n");
@@ -176,7 +176,7 @@ int main(int argc, char ** argv) {
         printf("Unexpected AVB footer version: %u.%u\n",
                footer.version_major, footer.version_minor);
         fclose(f);
-        return 1;
+        return 12;
     }
 
     fseek(f, footer.original_image_size - SIGNERVER2_SIZE, SEEK_SET);
@@ -185,12 +185,12 @@ int main(int argc, char ** argv) {
     if (read_size != 1) {
         perror("fread failed for SignerVer02 magic");
         fclose(f);
-        return 1;
+        return 13;
     }
     if (memcmp(magic, SIGNERVER2_MAGIC, SIGNERVER2_MAGIC_SIZE) == 0) {
         printf("SignerVer02 magic already present, nothing to do\n");
         fclose(f);
-        return 0;
+        return 14;
     }
 
     printf("Adding magic & modifying AVB footer\n");
@@ -200,13 +200,13 @@ int main(int argc, char ** argv) {
     if (read_size != 1) {
         perror("fread failed for post-image end data");
         fclose(f);
-        return 1;
+        return 15;
     }
     for (size_t i = 0; i < SIGNERVER2_SIZE; i++) {
         if (data[i] != 0) {
             printf("Unexpected data at end of image\n");
             fclose(f);
-            return 1;
+            return 16;
         }
     }
 
@@ -215,7 +215,7 @@ int main(int argc, char ** argv) {
     if (written_size != 1) {
         perror("fwrite failed for SignerVer02 magic");
         fclose(f);
-        return 1;
+        return 17;
     }
     footer.original_image_size += SIGNERVER2_SIZE;
 
@@ -227,7 +227,7 @@ int main(int argc, char ** argv) {
     if (written_size != 1) {
         perror("fwrite failed for AVB footer");
         fclose(f);
-        return 1;
+        return 18;
     }
 
     fclose(f);
