@@ -195,27 +195,21 @@ int main(int argc, char ** argv) {
 
     printf("Adding magic & modifying AVB footer\n");
     fseek(f, footer.original_image_size, SEEK_SET);
-    uint8_t data[SIGNERVER2_SIZE];
-    read_size = fread(data, sizeof(data), 1, f);
-    if (read_size != 1) {
-        perror("fread failed for post-image end data");
+    uint8_t zeroes[SIGNERVER2_SIZE];
+    memset(zeroes, 0, sizeof(zeroes));
+    size_t written_size = fwrite(zeroes, sizeof(zeroes), 1, f);
+    if (written_size != 1) {
+        perror("fwrite failed for zeroes");
         fclose(f);
         return 15;
     }
-    for (size_t i = 0; i < SIGNERVER2_SIZE; i++) {
-        if (data[i] != 0) {
-            printf("Unexpected data at end of image\n");
-            fclose(f);
-            return 16;
-        }
-    }
 
     fseek(f, footer.original_image_size, SEEK_SET);
-    size_t written_size = fwrite(SIGNERVER2_MAGIC, sizeof(SIGNERVER2_MAGIC), 1, f);
+    written_size = fwrite(SIGNERVER2_MAGIC, sizeof(SIGNERVER2_MAGIC), 1, f);
     if (written_size != 1) {
         perror("fwrite failed for SignerVer02 magic");
         fclose(f);
-        return 17;
+        return 16;
     }
     footer.original_image_size += SIGNERVER2_SIZE;
 
@@ -227,7 +221,7 @@ int main(int argc, char ** argv) {
     if (written_size != 1) {
         perror("fwrite failed for AVB footer");
         fclose(f);
-        return 18;
+        return 17;
     }
 
     fclose(f);
