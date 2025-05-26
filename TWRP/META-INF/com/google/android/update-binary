@@ -27,7 +27,7 @@ unzip -o "$3" fixbootableimage -d /tmp/
 [ -e "/tmp/fixbootableimage" ] || abort "Failed to extract binary"
 chmod +x /tmp/fixbootableimage
 
-/tmp/fixbootableimage "$BOOTIMAGE" > /tmp/log.txt
+/tmp/fixbootableimage "$BOOTIMAGE" > /tmp/log.txt 2>&1
 code=$?
 while read -r line; do
   ui_print "[*] $line"

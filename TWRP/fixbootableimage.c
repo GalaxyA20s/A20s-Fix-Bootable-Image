@@ -78,11 +78,13 @@ void abortf(int code, const char *fmt, ...) {
         va_end(args);
     }
 
-    if (errno) perror("Error");
+    // if (errno) perror("Last error");
     exit(code);
 }
 
 int main(int argc, char ** argv) {
+    setvbuf(stdout, NULL, _IOLBF, 0);
+    setvbuf(stderr, NULL, _IOLBF, 0);
     if (argc != 2) 
         abortf(1, "Usage: %s <boot.img>", argv[0]);
 
