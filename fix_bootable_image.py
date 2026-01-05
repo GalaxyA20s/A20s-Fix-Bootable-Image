@@ -61,10 +61,10 @@ if data[-AVB_FOOTER_SIZE:].startswith(AVB_FOOTER_MAGIC):
     if version_major != AVB_FOOTER_VERSION_MAJOR or version_minor != AVB_FOOTER_VERSION_MINOR:
         print(f'Warning: Unexpected AVB footer version: {version_major}.{version_minor}')
 
-    # If SEANDROIDENFORCE is present, preserve it
+    # Handle Magisk v30.6's incorrect handling of SEANDROIDENFORCE (https://github.com/topjohnwu/Magisk/issues/9623)
     if data[original_image_size:original_image_size + len(SEANDROID_ENFORCE)] == SEANDROID_ENFORCE:
         original_image_size += len(SEANDROID_ENFORCE)
-        print(f'Preserving {SEANDROID_ENFORCE.decode()}')
+        print(f'Fixing Magisk v30.6\'s incorrect AVB Footer...')
 
     # Add SignerVer02 magic
     assert data[original_image_size:original_image_size + SIGNERVER2_SIZE] == b'\x00' * SIGNERVER2_SIZE
