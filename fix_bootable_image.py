@@ -8,6 +8,8 @@ BOOTIMG_MAGIC = b'ANDROID!'
 SIGNERVER2_MAGIC = b'SignerVer02'
 SIGNERVER2_SIZE = 512
 
+SEANDROID_ENFORCE = b'SEANDROIDENFORCE'
+
 # AVB footer
 AVB_FOOTER_MAGIC = b'AVBf'
 AVB_FOOTER_SIZE = 64
@@ -47,19 +49,23 @@ if SIGNERVER2_MAGIC in data:
 # Check if AVB footer is already present
 if data[-AVB_FOOTER_SIZE:].startswith(AVB_FOOTER_MAGIC):
     print('Adding magic & modifying AVB footer...')
-    pos = len(data) - AVB_FOOTER_SIZE
-    assert len(data[pos:]) == AVB_FOOTER_SIZE
 
-    pos += 4  # Skip magic
+    # Read existing AVB footer
+    pos = len(data) - AVB_FOOTER_SIZE
+    pos += len(AVB_FOOTER_MAGIC)  # Skip magic
     version_major = int.from_bytes(data[pos:pos + 4], 'big')
     pos += 4
     version_minor = int.from_bytes(data[pos:pos + 4], 'big')
     pos += 4
-
+    original_image_size = int.from_bytes(data[pos:pos + 8], 'big')
     if version_major != AVB_FOOTER_VERSION_MAJOR or version_minor != AVB_FOOTER_VERSION_MINOR:
         print(f'Warning: Unexpected AVB footer version: {version_major}.{version_minor}')
 
-    original_image_size = int.from_bytes(data[pos:pos + 8], 'big')
+    # If SEANDROIDENFORCE is present, preserve it
+    if data[original_image_size:original_image_size + len(SEANDROID_ENFORCE)] == SEANDROID_ENFORCE:
+        original_image_size += len(SEANDROID_ENFORCE)
+        print(f'Preserving {SEANDROID_ENFORCE.decode()}')
+
     # Add SignerVer02 magic
     assert data[original_image_size:original_image_size + SIGNERVER2_SIZE] == b'\x00' * SIGNERVER2_SIZE
     data[original_image_size:original_image_size + len(SIGNERVER2_MAGIC)] = SIGNERVER2_MAGIC
